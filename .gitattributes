@@ -1,0 +1,7 @@
+*.cmd -text -diff
+*.data -text -diff
+*.zip -text -diff
+*.jpg -text -diff
+*.png -text -diff
+*.md text eol=lf
+*.ps1 text eol=lf
