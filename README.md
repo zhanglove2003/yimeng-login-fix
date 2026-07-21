@@ -67,6 +67,12 @@ https://share.weiyun.com/B7zHWzWT
 - `Engine\Binaries\Win32\netease.data`
 - `Engine\Binaries\Win64\netease.data`
 
+## 系统兼容性
+
+- 支持 Windows 10 和 Windows 11。
+- 无需额外安装 PowerShell 7。脚本会优先使用已安装的 PowerShell 7；未安装时自动使用 Windows 自带的 Windows PowerShell 5.1。
+- 如果系统中两者都不存在（通常只会出现在精简系统或系统组件被移除的情况），脚本会提示 `PowerShell was not found` 后退出，不会修改游戏文件。请在标准 Windows 环境中运行，或恢复 Windows PowerShell 组件。
+
 ## 使用记录和备份
 
 每次运行脚本时，都会先把原文件备份到游戏目录下：
@@ -106,7 +112,7 @@ Done. Backup: D:\wyclx\_tmsoft_fix_backup\20260720-160755
 脚本 SHA256：
 
 ```text
-C710EF609468A66C5DDE52B114FBDCADC5B6B52763F60664C9EDCAD2E4385A41
+199AD5570E5560247E6AF513C1F1EFF6BE59AB38494DA8E86202CDD5D25F73FB
 ```
 
 替换后的 `netease.data` SHA256：

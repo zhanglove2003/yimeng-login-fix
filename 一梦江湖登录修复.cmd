@@ -1,10 +1,21 @@
 @echo off
 setlocal
 set "YIMENG_FIX_SELF=%~f0"
-set "PWSH=%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe"
-if not exist "%PWSH%" set "PWSH=pwsh.exe"
+set "PWSH="
+if exist "%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe" set "PWSH=%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe"
+if not defined PWSH if exist "%ProgramW6432%\PowerShell\7\pwsh.exe" set "PWSH=%ProgramW6432%\PowerShell\7\pwsh.exe"
+if not defined PWSH if exist "%ProgramFiles%\PowerShell\7\pwsh.exe" set "PWSH=%ProgramFiles%\PowerShell\7\pwsh.exe"
+if not defined PWSH for %%I in (pwsh.exe) do if not "%%~$PATH:I"=="" set "PWSH=%%~$PATH:I"
+if not defined PWSH if exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" set "PWSH=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
+if not defined PWSH (
+  echo [ERROR] PowerShell was not found. No game files were changed.
+  set "RC=1"
+  goto :done
+)
+echo [*] Using PowerShell: %PWSH%
 "%PWSH%" -NoProfile -ExecutionPolicy Bypass -Command "$p=$env:YIMENG_FIX_SELF; $s=[IO.File]::ReadAllText($p); $m='### POWERSHELL SECTION ###'; $i=$s.LastIndexOf($m); if($i -lt 0){throw 'PowerShell section marker missing'}; Invoke-Expression $s.Substring($i + $m.Length)"
 set "RC=%ERRORLEVEL%"
+:done
 echo.
 if not "%YIMENG_NO_PAUSE%"=="1" pause
 exit /b %RC%
@@ -49,7 +60,7 @@ function Get-Sha256HexFromBytes {
 
 function Get-Sha256HexFromFile {
   param([string]$Path)
-  (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash
+  Get-Sha256HexFromBytes -Bytes ([System.IO.File]::ReadAllBytes($Path))
 }
 
 function Test-YiMengGameRoot {
@@ -237,7 +248,7 @@ function Find-YiMengGameRoots {
     Add-YiMengCandidateAndParents -Candidates $candidates -Seen $seen -Path $target -MaxParents 8
   }
 
-  $yiMengName = [string]::Concat([char]0x4E00, [char]0x68A6, [char]0x6C5F, [char]0x6E56)
+  $yiMengName = ([char]0x4E00).ToString() + ([char]0x68A6).ToString() + ([char]0x6C5F).ToString() + ([char]0x6E56).ToString()
   $neteaseName = [string]::Concat([char]0x7F51, [char]0x6613)
   foreach ($drive in [System.IO.DriveInfo]::GetDrives()) {
     if ($drive.DriveType -ne [System.IO.DriveType]::Fixed -or -not $drive.IsReady) {

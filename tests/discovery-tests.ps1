@@ -54,6 +54,77 @@ function Get-TargetHashes {
   )
 }
 
+function Invoke-CmdScriptWithoutPowerShell7 {
+  param(
+    [string]$ScriptPath,
+    [string]$GameRoot,
+    [string]$TempRoot
+  )
+
+  $process = [System.Diagnostics.Process]::new()
+  $process.StartInfo.FileName = $env:ComSpec
+  $process.StartInfo.Arguments = "/d /c `"$ScriptPath`""
+  $process.StartInfo.UseShellExecute = $false
+  $process.StartInfo.RedirectStandardOutput = $true
+  $process.StartInfo.RedirectStandardError = $true
+  $process.StartInfo.Environment['YIMENG_NO_PAUSE'] = '1'
+  $process.StartInfo.Environment['YIMENG_GAME_ROOT'] = $GameRoot
+  $process.StartInfo.Environment['LOCALAPPDATA'] = (Join-Path $TempRoot 'no-pwsh-here')
+  $pathWithoutPowerShell7 = $env:PATH -split ';' | Where-Object {
+    $_ -and -not (Test-Path -LiteralPath (Join-Path $_ 'pwsh.exe') -PathType Leaf)
+  }
+  $process.StartInfo.Environment['PATH'] = $pathWithoutPowerShell7 -join ';'
+
+  if (-not $process.Start()) {
+    throw 'Failed to start cmd.exe for the no-PowerShell-7 regression test.'
+  }
+
+  $stdout = $process.StandardOutput.ReadToEnd()
+  $stderr = $process.StandardError.ReadToEnd()
+  $process.WaitForExit()
+
+  [pscustomobject]@{
+    ExitCode = $process.ExitCode
+    Output = ($stdout + $stderr)
+  }
+}
+
+function Invoke-CmdScriptWithoutAnyPowerShell {
+  param(
+    [string]$ScriptPath,
+    [string]$GameRoot,
+    [string]$TempRoot
+  )
+
+  $missingSystemRoot = Join-Path $TempRoot 'no-powershell-system-root'
+  $process = [System.Diagnostics.Process]::new()
+  $process.StartInfo.FileName = $env:ComSpec
+  $process.StartInfo.Arguments = "/d /c `"$ScriptPath`""
+  $process.StartInfo.UseShellExecute = $false
+  $process.StartInfo.RedirectStandardOutput = $true
+  $process.StartInfo.RedirectStandardError = $true
+  $process.StartInfo.Environment['YIMENG_NO_PAUSE'] = '1'
+  $process.StartInfo.Environment['YIMENG_GAME_ROOT'] = $GameRoot
+  $process.StartInfo.Environment['LOCALAPPDATA'] = (Join-Path $TempRoot 'no-pwsh-here')
+  $process.StartInfo.Environment['ProgramFiles'] = (Join-Path $TempRoot 'no-pwsh-program-files')
+  $process.StartInfo.Environment['ProgramW6432'] = (Join-Path $TempRoot 'no-pwsh-program-files')
+  $process.StartInfo.Environment['SystemRoot'] = $missingSystemRoot
+  $process.StartInfo.Environment['PATH'] = ''
+
+  if (-not $process.Start()) {
+    throw 'Failed to start cmd.exe for the no-PowerShell regression test.'
+  }
+
+  $stdout = $process.StandardOutput.ReadToEnd()
+  $stderr = $process.StandardError.ReadToEnd()
+  $process.WaitForExit()
+
+  [pscustomobject]@{
+    ExitCode = $process.ExitCode
+    Output = ($stdout + $stderr)
+  }
+}
+
 $testRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('一梦江湖 测试 用户 ' + [guid]::NewGuid().ToString('N'))
 $directRoot = Join-Path $testRoot 'direct'
 $discoveryRoot = Join-Path $testRoot 'discovery'
@@ -85,6 +156,25 @@ try {
   }
 
   Remove-Item Env:\YIMENG_GAME_ROOT -ErrorAction SilentlyContinue
+  $builtinShellRoot = Join-Path $testRoot 'Windows PowerShell fallback'
+  New-FakeGameRoot -Root $builtinShellRoot -Seed 8
+  $fallbackResult = Invoke-CmdScriptWithoutPowerShell7 -ScriptPath $scriptPath -GameRoot $builtinShellRoot -TempRoot $testRoot
+  if ($fallbackResult.ExitCode -ne 0) {
+    throw "Script did not fall back to Windows PowerShell when pwsh.exe was unavailable. ExitCode=$($fallbackResult.ExitCode)`n$($fallbackResult.Output)"
+  }
+  Assert-TargetHash -Root $builtinShellRoot -ExpectedHash $expectedHash
+
+  $noShellRoot = Join-Path $testRoot 'No PowerShell'
+  New-FakeGameRoot -Root $noShellRoot -Seed 9
+  $beforeNoShell = Get-TargetHashes -Root $noShellRoot
+  $noShellResult = Invoke-CmdScriptWithoutAnyPowerShell -ScriptPath $scriptPath -GameRoot $noShellRoot -TempRoot $testRoot
+  if ($noShellResult.ExitCode -eq 0 -or $noShellResult.Output -notmatch '\[ERROR\] PowerShell was not found\. No game files were changed\.') {
+    throw "Script did not report a safe no-PowerShell failure. ExitCode=$($noShellResult.ExitCode)`n$($noShellResult.Output)"
+  }
+  $afterNoShell = Get-TargetHashes -Root $noShellRoot
+  if ($beforeNoShell[0] -ne $afterNoShell[0] -or $beforeNoShell[1] -ne $afterNoShell[1]) {
+    throw 'Target files changed even though no PowerShell was available.'
+  }
 
   $gameOne = Join-Path $discoveryRoot 'A Root\YiMeng One'
   $gameTwo = Join-Path $discoveryRoot 'B Root 中文 & 空格\YiMeng Two'
