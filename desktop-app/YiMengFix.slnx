@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/YiMengFix.Core/YiMengFix.Core.csproj" />
+    <Project Path="src/YiMengFix.UI/YiMengFix.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/YiMengFix.Core.Tests/YiMengFix.Core.Tests.csproj" />
+  </Folder>
+</Solution>

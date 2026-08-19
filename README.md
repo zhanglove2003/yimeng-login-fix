@@ -29,6 +29,7 @@
 ## 文件
 
 - `一梦江湖登录修复.cmd`
+- `desktop-app/`：WPF 桌面版工程（Windows 10/11 x64）
 - `offline-package/Engine.zip`
 - `offline-package/Engine/Binaries/Win32/netease.data`
 - `offline-package/Engine/Binaries/Win64/netease.data`
@@ -66,6 +67,15 @@ https://share.weiyun.com/B7zHWzWT
 
 - `Engine\Binaries\Win32\netease.data`
 - `Engine\Binaries\Win64\netease.data`
+
+## 桌面版
+
+桌面版提供路径检查、进程检测、SHA-256 校验、自动备份和一键回退。发布文件请前往 GitHub Releases 下载：
+
+- `YiMengFix.exe`：便携单文件版本
+- `YiMengFix-Setup-1.0.0-win-x64.exe`：安装版
+
+桌面版不会修改原有 `.cmd` 脚本，也不会上传用户电脑里的路径、账号或游戏文件。
 
 ## 系统兼容性
 

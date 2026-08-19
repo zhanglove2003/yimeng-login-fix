@@ -1,0 +1,386 @@
+<Window x:Class="YiMengFix.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:core="clr-namespace:YiMengFix.Core;assembly=YiMengFix.Core"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="一梦江湖登录修复"
+        Icon="/Assets/app-icon.ico"
+        Width="760"
+        Height="640"
+        MinWidth="680"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        Loaded="MainWindow_Loaded"
+        Closed="MainWindow_Closed"
+        StateChanged="MainWindow_StateChanged"
+        SourceInitialized="MainWindow_SourceInitialized">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="40"
+                            ResizeBorderThickness="6"
+                            GlassFrameThickness="0"
+                            CornerRadius="0"
+                            UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Border x:Name="WindowFrame"
+            Background="{DynamicResource WindowBackgroundBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            SnapsToDevicePixels="True">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    Background="{DynamicResource TitleBarBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0,0,0,1"
+                    CornerRadius="8,8,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Margin="13,0,0,0"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                        <Image Width="20"
+                               Height="20"
+                               Margin="0,0,9,0"
+                               Source="/Assets/app-icon.png"
+                               SnapsToDevicePixels="True" />
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="12.5"
+                                   FontWeight="SemiBold"
+                                   Text="一梦江湖登录修复" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <StackPanel Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Orientation="Horizontal">
+                            <TextBlock Margin="0,0,8,0"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       Text="深色" />
+                            <ToggleButton x:Name="ThemeToggle"
+                                          Style="{StaticResource SwitchToggleStyle}"
+                                          AutomationProperties.Name="切换深色模式"
+                                          ToolTip="切换深色模式"
+                                          Checked="ThemeToggle_Changed"
+                                          Unchecked="ThemeToggle_Changed" />
+                        </StackPanel>
+                        <Button Style="{StaticResource CaptionButtonStyle}"
+                                AutomationProperties.Name="最小化窗口"
+                                ToolTip="最小化"
+                                Click="MinimizeButton_Click">
+                            <TextBlock FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10"
+                                       Text="&#xE921;" />
+                        </Button>
+                        <Button Style="{StaticResource CaptionButtonStyle}"
+                                AutomationProperties.Name="最大化或还原窗口"
+                                ToolTip="最大化或还原"
+                                Click="MaximizeButton_Click">
+                            <TextBlock x:Name="MaximizeGlyph"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10"
+                                       Text="&#xE922;" />
+                        </Button>
+                        <Button Style="{StaticResource CloseCaptionButtonStyle}"
+                                AutomationProperties.Name="关闭窗口"
+                                ToolTip="关闭"
+                                Click="CloseButton_Click">
+                            <TextBlock FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10"
+                                       Text="&#xE8BB;" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="22,16,22,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Margin="0,0,0,14">
+                    <TextBlock FontSize="22"
+                               FontWeight="SemiBold"
+                               Text="一梦江湖登录修复" />
+                    <TextBlock Margin="0,4,0,0"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               Text="检查游戏文件，自动备份后安全应用修复。" />
+                </StackPanel>
+
+                <Border Grid.Row="1"
+                        Padding="0,0,0,14"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="0,0,0,1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Margin="0,0,0,7"
+                                   FontWeight="SemiBold"
+                                   Text="游戏目录" />
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="GameRootBox"
+                                     AutomationProperties.Name="游戏安装目录"
+                                     KeyDown="GameRootBox_KeyDown"
+                                     LostKeyboardFocus="GameRootBox_LostKeyboardFocus" />
+                            <Button x:Name="BrowseButton"
+                                    Grid.Column="1"
+                                    Margin="8,0,0,0"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    AutomationProperties.Name="浏览游戏目录"
+                                    Click="BrowseButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Margin="0,0,7,0"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               Text="&#xE8B7;" />
+                                    <TextBlock Text="浏览" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="CheckButton"
+                                    Grid.Column="2"
+                                    Margin="8,0,0,0"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    AutomationProperties.Name="重新检查"
+                                    Click="CheckButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Margin="0,0,7,0"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               Text="&#xE72C;" />
+                                    <TextBlock Text="检查" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="2" Margin="0,13,0,10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Margin="0,0,0,8"
+                               FontWeight="SemiBold"
+                               Text="环境检查" />
+                    <ItemsControl Grid.Row="1" ItemsSource="{Binding CheckRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid MinHeight="24" Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="24" />
+                                        <ColumnDefinition Width="170" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="StatusIcon"
+                                               Margin="1,1,0,0"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="13"
+                                               Text="{Binding IconGlyph}" />
+                                    <TextBlock Grid.Column="1"
+                                               VerticalAlignment="Center"
+                                               FontWeight="SemiBold"
+                                               Text="{Binding Label}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="2"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               Text="{Binding Detail}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding Detail}" />
+                                </Grid>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static core:CheckStatus.Passed}">
+                                        <Setter TargetName="StatusIcon" Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static core:CheckStatus.Warning}">
+                                        <Setter TargetName="StatusIcon" Property="Foreground" Value="{DynamicResource WarningBrush}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static core:CheckStatus.Failed}">
+                                        <Setter TargetName="StatusIcon" Property="Foreground" Value="{DynamicResource ErrorBrush}" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+
+                <Border Grid.Row="3"
+                        Padding="0,12"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="0,1,0,1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <Grid x:Name="LoadingSpinner"
+                                      Width="16"
+                                      Height="16"
+                                      Margin="0,0,8,0"
+                                      VerticalAlignment="Center"
+                                      Visibility="Collapsed">
+                                    <Ellipse Width="13"
+                                             Height="13"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Stroke="{DynamicResource AccentBrush}"
+                                             StrokeThickness="2"
+                                             StrokeDashArray="2 3"
+                                             RenderTransformOrigin="0.5,0.5">
+                                        <Ellipse.RenderTransform>
+                                            <RotateTransform x:Name="SpinnerRotate" CenterX="6.5" CenterY="6.5" />
+                                        </Ellipse.RenderTransform>
+                                    </Ellipse>
+                                </Grid>
+                                <Ellipse x:Name="StatusDot"
+                                         Width="7"
+                                         Height="7"
+                                         Margin="0,0,8,0"
+                                         VerticalAlignment="Center"
+                                         Fill="{DynamicResource SecondaryTextBrush}" />
+                                <TextBlock x:Name="StatusText"
+                                           FontWeight="SemiBold"
+                                           AutomationProperties.Name="当前操作状态"
+                                           Text="等待检查…" />
+                            </StackPanel>
+                            <ProgressBar x:Name="OperationProgress"
+                                         Margin="0,9,18,0"
+                                         Minimum="0"
+                                         Maximum="100"
+                                         Style="{StaticResource SlimProgressBarStyle}"
+                                         Visibility="Collapsed" />
+                        </StackPanel>
+                        <Button x:Name="ApplyButton"
+                                Grid.Column="1"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                IsEnabled="False"
+                                AutomationProperties.Name="开始修复"
+                                Click="ApplyButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Margin="0,0,8,0"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           Text="&#xE90F;" />
+                                <TextBlock Text="开始修复" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="4" Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   Text="上次备份" />
+                        <TextBlock x:Name="LatestBackupText"
+                                   Grid.Column="1"
+                                   Margin="12,0,16,0"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   Text="暂无可回退备份"
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        <Button x:Name="RollbackButton"
+                                Grid.Column="2"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                IsEnabled="False"
+                                AutomationProperties.Name="回退上一次修复"
+                                Click="RollbackButton_Click"
+                                Content="回退上次修复" />
+                        <Button Grid.Column="4"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                AutomationProperties.Name="打开日志文件"
+                                Click="OpenLogButton_Click"
+                                Content="打开日志" />
+                    </Grid>
+
+                    <Border x:Name="SuccessPanel"
+                            Grid.Row="1"
+                            Margin="0,9,0,0"
+                            Padding="10,8"
+                            Background="{DynamicResource SubtleBrush}"
+                            CornerRadius="6"
+                            Visibility="Collapsed">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Margin="0,0,8,0"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       Foreground="{DynamicResource SuccessBrush}"
+                                       Text="&#xE73E;" />
+                            <TextBlock x:Name="BackupPathText"
+                                       Grid.Column="1"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+                            <Button Grid.Column="2"
+                                    Height="30"
+                                    MinWidth="90"
+                                    Padding="10,0"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    AutomationProperties.Name="打开最近备份目录"
+                                    Click="OpenBackupButton_Click"
+                                    Content="打开备份目录" />
+                        </Grid>
+                    </Border>
+
+                    <Expander Grid.Row="2"
+                              Margin="0,7,0,0"
+                              Foreground="{DynamicResource SecondaryTextBrush}"
+                              Header="详细日志">
+                        <ListBox x:Name="LogList"
+                                 Margin="0,6,0,0"
+                                 Height="96"
+                                 ItemsSource="{Binding LogEntries}"
+                                 Background="{DynamicResource SurfaceBrush}"
+                                 Foreground="{DynamicResource SecondaryTextBrush}"
+                                 BorderBrush="{DynamicResource BorderBrush}"
+                                 FontFamily="Cascadia Mono, Consolas"
+                                 FontSize="11"
+                                 AutomationProperties.Name="详细操作日志" />
+                    </Expander>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

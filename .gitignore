@@ -1,0 +1,14 @@
+
+# Local build output
+desktop-app/artifacts/
+desktop-app/**/bin/
+desktop-app/**/obj/
+desktop-app/.vs/
+
+# Local logs and settings
+desktop-app/**/*.log
+desktop-app/.local/
+
+# Python cache
+desktop-app/**/__pycache__/
+desktop-app/**/*.pyc
