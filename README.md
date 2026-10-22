@@ -1,132 +1,88 @@
-# 一梦江湖登录修复
+# YiMengFix · 游戏客户端桌面修复工具
 
-这是一个 Windows 单文件批处理脚本，用于修复《一梦江湖》PC 端登录异常。
+一个 C# / .NET 桌面工具，用于修复某款游戏 PC 客户端的启动异常。项目包含 **WPF 图形界面**、**单文件命令行脚本**和**可回滚的安全替换流程**，重点在于安全的文件替换与可测试的工程结构。
 
-## 解决的问题
+> 定位：个人练习性质的桌面应用项目，非商业软件。所有替换操作都会先备份、后校验，并提供一键回滚。
 
-《一梦江湖》PC 端在每次大更新后，或者新账号首次登录时，可能会提示：
+## 技术栈
 
-```text
-桌面版模拟器技术升级中，请用手机客户端登录。
+| 层 | 技术 |
+|---|---|
+| UI | WPF (.NET, XAML) — 路径选择、进程检测、进度反馈 |
+| 核心逻辑 | C# 类库，接口抽象 + 依赖注入 |
+| 打包 | Inno Setup 安装包 + 单文件便携版 |
+| 命令行版 | PowerShell (兼容 Windows PowerShell 5.1 与 PowerShell 7) |
+
+## 工程结构
+
+```
+desktop-app/
+├── src/YiMengFix.Core/      核心逻辑（无 UI 依赖，可单独测试）
+│   ├── FixService.cs        7 步修复流程：预检 → 备份 → 校验 → 替换 → 验证
+│   ├── Contracts.cs         IFileSystem / IProcessDetector / IPayloadProvider 抽象
+│   ├── EmbeddedPayloadProvider.cs   内嵌 payload，运行时 SHA-256 校验
+│   └── WindowsProcessDetector.cs    进程占用检测
+└── src/YiMengFix.UI/        WPF 界面层
 ```
 
-这种情况下，PC 端无法继续正常扫码登录。运行本脚本修复后，可以恢复到正常的扫码确认流程。
+**设计要点**：`FixService` 通过构造函数注入 `IFileSystem`、`IProcessDetector`、`IPayloadProvider`，核心流程不直接触碰真实文件系统，因此可以脱离 UI 做单元测试。
 
-## 效果截图
+目录识别逻辑配有独立测试脚本（`tests/discovery-tests.ps1`，211 行），覆盖中文路径、多候选目录、哈希校验等边界情况。
 
-修复前，PC 端登录时出现升级提示：
+## 核心流程
 
-![修复前提示](docs/images/01-before-upgrade-warning.jpg)
+1. **预检（Preflight）** — 校验游戏目录存在、目标文件存在、进程未占用
+2. **备份** — 原文件备份到 `_tmsoft_fix_backup\<时间戳>\`，失败即中止
+3. **校验** — 内嵌数据与目标文件做 SHA-256 比对
+4. **替换** — 写入 `Engine\Binaries\{Win32,Win64}\netease.data`
+5. **回滚（Restore）** — 按备份记录还原任意历史版本
 
-修复后，手机扫码时可以正常出现登录确认：
+任何一步失败都会中止后续操作，不会出现"改了一半"的状态。
 
-![手机确认登录](docs/images/02-phone-confirm-login.jpg)
+## 安全设计
 
-修复后，PC 端可以正常显示扫码成功：
+- **先备份后替换** — 备份失败直接退出，不动原文件
+- **哈希校验** — 内嵌数据与写入结果都做 SHA-256 校验（脚本自身 `199AD5...F73FB`，替换后文件 `535854...D87`）
+- **离线运行** — 不访问网络，不下载外部依赖，不收集用户路径/账号/文件信息
+- **可回滚** — 每次运行生成独立备份目录，支持从任意历史备份还原
+- **进程检测** — 游戏运行中拒绝修改，避免文件锁导致的损坏
 
-![PC 扫码成功](docs/images/03-pc-scan-success.png)
+## 使用方式
 
-## 文件
+### 图形界面版
 
-- `一梦江湖登录修复.cmd`
-- `desktop-app/`：WPF 桌面版工程（Windows 10/11 x64）
-- `offline-package/Engine.zip`
-- `offline-package/Engine/Binaries/Win32/netease.data`
-- `offline-package/Engine/Binaries/Win64/netease.data`
+从 Releases 下载：
 
-## 离线说明
+- `YiMengFix.exe` — 便携单文件
+- `YiMengFix-Setup-1.0.0-win-x64.exe` — 安装版
 
-修复脚本是离线脚本，不依赖原始下载地址，也不会在运行时下载 `Engine.zip`。
+运行后选择游戏目录（支持自动识别：扫描常见盘符、解析快捷方式目标），点击修复即可。界面会显示每一步的检查结果。
 
-脚本内已经嵌入同一份 `netease.data` 数据，运行时会先校验内嵌数据 SHA256，再写入游戏目录下的两个目标文件。
+### 命令行版
 
-`offline-package/` 里同时保存了原始 `Engine.zip` 和解压后的两个 `netease.data` 文件，方便人工校验或手动替换。
+1. 完全退出游戏与启动器
+2. 右键 `一梦江湖登录修复.cmd` → 以管理员身份运行
+3. 按提示确认目录，看到 `Done` 后重启游戏
 
-为了保护历史来源域名和减少外部依赖，本仓库不公开记录原始获取地址。即使外部地址失效，脚本仍可离线替换。
+## 目录自动识别
 
-## 游戏安装包
+- 支持中文用户名、中文路径、空格与特殊字符
+- 支持通过桌面 / 开始菜单快捷方式反查安装目录
+- 支持常见盘符根目录（如 `D:\wyclx`）
+- 找到多个候选时列出编号让用户选择
+- 找不到时可手动粘贴路径
+- **判断标准是目标文件存在与否，而非目录名** —— 避免误判
 
-游戏安装包已单独放在腾讯微云：
+## 兼容性
 
-```text
-https://share.weiyun.com/B7zHWzWT
-```
+- Windows 10 / 11
+- 优先使用 PowerShell 7，未安装时回退到系统自带 5.1
+- 两者都不存在时提示后退出，不会修改任何文件
 
-安装游戏后，再运行本仓库里的修复脚本。
+## 说明
 
-## 使用
+本项目用于学习桌面应用的分层架构、可测试性设计与安全的文件操作流程。仓库中的 payload 仅用于修复特定客户端的兼容性问题，不包含任何反作弊或作弊相关功能。
 
-1. 先完全退出《一梦江湖》PC 端和启动器。
-2. 下载本仓库里的 `一梦江湖登录修复.cmd`。
-3. 右键 `一梦江湖登录修复.cmd`。
-4. 选择“以管理员身份运行”。
-5. 按提示确认或选择游戏目录。
-6. 看到 `Done` 后重新启动游戏，再扫码登录。
+---
 
-脚本会先备份原文件，再替换：
-
-- `Engine\Binaries\Win32\netease.data`
-- `Engine\Binaries\Win64\netease.data`
-
-## 桌面版
-
-桌面版提供路径检查、进程检测、SHA-256 校验、自动备份和一键回退。发布文件请前往 GitHub Releases 下载：
-
-- `YiMengFix.exe`：便携单文件版本
-- `YiMengFix-Setup-1.0.0-win-x64.exe`：安装版
-
-桌面版不会修改原有 `.cmd` 脚本，也不会上传用户电脑里的路径、账号或游戏文件。
-
-## 系统兼容性
-
-- 支持 Windows 10 和 Windows 11。
-- 无需额外安装 PowerShell 7。脚本会优先使用已安装的 PowerShell 7；未安装时自动使用 Windows 自带的 Windows PowerShell 5.1。
-- 如果系统中两者都不存在（通常只会出现在精简系统或系统组件被移除的情况），脚本会提示 `PowerShell was not found` 后退出，不会修改游戏文件。请在标准 Windows 环境中运行，或恢复 Windows PowerShell 组件。
-
-## 使用记录和备份
-
-每次运行脚本时，都会先把原文件备份到游戏目录下：
-
-```text
-_tmsoft_fix_backup\yyyyMMdd-HHmmss
-```
-
-例如脚本最后显示：
-
-```text
-Done. Backup: D:\wyclx\_tmsoft_fix_backup\20260720-160755
-```
-
-这个备份目录就是本次修复的使用记录。需要恢复时，可以从对应时间目录里找回原来的两个 `netease.data` 文件。
-
-脚本不会上传用户电脑里的路径、账号或游戏文件。
-
-## 目录识别
-
-脚本会自动查找游戏目录：
-
-- 支持中文用户名、中文路径、空格和特殊字符路径
-- 支持通过桌面/开始菜单快捷方式反查安装目录
-- 支持常见盘符根目录，例如 `D:\wyclx`
-- 如果只找到一个目录，会让用户确认
-- 如果找到多个目录，会显示编号让用户选择
-- 如果没有找到，可以手动粘贴游戏目录
-
-判断标准不是目录名，而是目录下必须存在两个目标文件：
-
-- `Engine\Binaries\Win32\netease.data`
-- `Engine\Binaries\Win64\netease.data`
-
-## 校验
-
-脚本 SHA256：
-
-```text
-199AD5570E5560247E6AF513C1F1EFF6BE59AB38494DA8E86202CDD5D25F73FB
-```
-
-替换后的 `netease.data` SHA256：
-
-```text
-535854FB2ABE71E16F645A879F1C00144FD9BA71548DE44B8E51E049BEAD2D87
-```
+*如果你在找嵌入式 / 固件方向的项目，可以看 [MyStm32_Esp8266project](https://github.com/zhanglove2003/MyStm32_Esp8266project) 和 [BetterESP8266firmware](https://github.com/zhanglove2003/BetterESP8266firmware)。*
