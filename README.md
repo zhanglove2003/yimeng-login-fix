@@ -85,4 +85,19 @@ desktop-app/
 
 ---
 
+<details>
+<summary><b>附：游戏获取</b>（仅本工具的功能说明需要，与本项目技术实现无关）</summary>
+
+<br>
+
+游戏安装包不在本仓库中。如需复现本工具的使用场景，请通过**官方渠道**获取客户端。
+
+> 早期版本这里曾放置一个第三方网盘（腾讯微云）链接。该链接已移除 —— 它指向的是游戏本体，与本工具的工程实现无关；第三方分发的安装包也存在安全风险，建议始终从官方渠道下载。
+
+安装游戏后，再运行本仓库的修复工具。
+
+</details>
+
+---
+
 *如果你在找嵌入式 / 固件方向的项目，可以看 [MyStm32_Esp8266project](https://github.com/zhanglove2003/MyStm32_Esp8266project) 和 [BetterESP8266firmware](https://github.com/zhanglove2003/BetterESP8266firmware)。*
